@@ -1,0 +1,7 @@
+gurman_telegram.settings_form:
+  path: '/admin/config/system/gurman_telegram'
+  defaults:
+    _title: 'Gurman Telegram setting'
+    _form: 'Drupal\gurman_telegram\Form\SettingsForm'
+  requirements:
+    _permission: 'administer gurman_telegram configuration'

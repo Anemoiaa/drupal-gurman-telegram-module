@@ -1,0 +1,60 @@
+<?php
+
+
+use Drupal\file\Entity\File;
+define('TG_BOT_TOKEN', \Drupal::config('gurman_telegram.settings')->get('tg_bot_token'));
+define('TG_CHANNEL_ID', \Drupal::config('gurman_telegram.settings')->get('tg_channel_id'));
+
+function gurman_telegram_node_presave(Drupal\Core\Entity\EntityInterface $node) {
+    if(!$node->isPublished()) {
+        return;
+    }
+    
+    switch ($node->bundle()) {
+        case 'news':
+            $fid = $node->field_news_image[0]->getValue()['target_id'];
+            $node_alias = \Drupal::service('path_alias.manager')->getAliasByPath('/node/'.$node->id());          
+            $file = File::load($fid);
+            $absolute_path = \Drupal::service('file_system')->realpath($file->getFileUri());
+            $caption = $node->field_news_body[0]->getValue()['value'];
+            $absolute_path_to_node = \Drupal::request()->getHost() . $node_alias;
+            $msg_id = $node->field_tg_message_id[0];
+            $api_method = '';
+            
+            if (strlen($caption) > 1000) {
+                $caption = mb_substr($caption, 0, 950, "UTF-8");
+                $caption = $caption . "...\n<a href='$absolute_path_to_node'>Читать дальше</a>"; 
+            }
+
+            $arrayQuery = array(
+                "chat_id" => TG_CHANNEL_ID,
+                "caption" => $caption,
+                "parse_mode" => "html",
+            );
+
+            if($msg_id) {
+                $arrayQuery["message_id"] = $msg_id->getValue()['value'];
+                $api_method = "/editMessageCaption";
+            } else {
+                $arrayQuery["photo"] = curl_file_create($absolute_path);
+                $api_method = "/sendPhoto";
+            }
+
+
+            $ch = curl_init("https://api.telegram.org/bot" . TG_BOT_TOKEN . $api_method);
+            curl_setopt($ch, CURLOPT_POST, 1);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, $arrayQuery);
+            curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+            curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
+            curl_setopt($ch, CURLOPT_HEADER, false);
+
+            $result = curl_exec($ch);
+            curl_close($ch);
+            
+            $msg_id = json_decode($result)->result->message_id;
+            $node->set('field_tg_message_id', $msg_id);
+            break;
+        default:
+    }
+}
+

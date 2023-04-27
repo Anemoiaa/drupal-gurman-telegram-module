@@ -1,0 +1,7 @@
+gurman_telegram.settings:
+  type: config_object
+  label: 'Gurman Telegram settings'
+  mapping:
+    example:
+      type: string
+      label: 'Example'

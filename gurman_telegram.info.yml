@@ -1,0 +1,5 @@
+name: Gurman telegram
+description: Provides sending messag (Node text and image) to telegram chat when adding content
+package: Gurman
+type: module
+core_version_requirement:  ^9 || ^10

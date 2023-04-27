@@ -1,0 +1,6 @@
+gurman_telegram.settings_form:
+  title: 'Gurman Telegram'
+  description: 'Configure Gurman Telegram.'
+  parent: system.admin_config_system
+  route_name: gurman_telegram.settings_form
+  weight: 10
